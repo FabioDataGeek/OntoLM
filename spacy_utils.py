@@ -27,28 +27,24 @@ class Ner():
         su componente de NER según la configuración
         '''
 
-        def detected_entities(text: str):
-            doc = self.nlp(text)
-            return doc
+    def detected_entities(self, text: str):
+        doc = self.nlp(text)
+        return doc
         
-
-        '''
+    '''
         El método linked_entities nos devuelve las entidades directamente conectadas
         a las entidades detectadas según la pipeline de spacy utilizada, a partir de este
         punto ya no hace falta utilizar más la pipeline, sino que guardaremos los resultados 
         obtenidos aquí y los daremos como entrada de datos a la clase entity que carga el
         entity linker. De esta forma evitamos tener en memoria al mismo tiempo la pipeline 
         y el entity linker, lo cual en el caso de un portátil resulta excesiva memoria.
-        '''
+    '''
 
-        def linked_entities(doc):
-            list_linked_entities = []
-            for ent in doc.ents:
-                linked_entities = ent._.kb_ents 
-                if len(linked_entities) > 0:
-                    list_linked_entities.append([str(ent), linked_entities])
-            return list_linked_entities
+    def linked_entities(self, doc):
+        list_linked_entities = []
+        for ent in doc.ents:
+            linked_entities = ent._.kb_ents 
+            if len(linked_entities) > 0:
+                list_linked_entities.append([str(ent), linked_entities])
+        return list_linked_entities
         
-'''
-Vamos a pasar a entities.py únicamente list_linked_entities
-'''

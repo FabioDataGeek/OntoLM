@@ -1,52 +1,132 @@
 import networkx as nx
 import pickle as pkl
+from utils import character_count
 
 class GraphGenerator():
 
-    def __init__(self) -> None:
+    def __init__(self, folder):
         self.graph = nx.Graph()
+        self.folder = folder
+
+    def connectionMethod1(self):
+        '''
+        Este método de conexión solamente conecta la última capa de los nodos directos e inversos
+        si coincide el TUI de las entidades
+        '''
+        max_counter = 0
+        # Asignamos un conteo para saber cuales son los nodos de la última fila por su número de puntos
+        for node in self.graph.nodes:
+            counter = character_count(node, '.')
+            if counter > max_counter:
+                max_counter = counter
+        for node in self.graph.nodes:
+            if node.startswith('0'):
+                # Nodos directos de la última fila
+                if character_count(node, '.') == max_counter:
+                    for Rnode in self.graph.nodes:
+                        if Rnode.startswith('R'):
+                            # Nodos inversos de la última fila
+                            if character_count(Rnode, '.') == max_counter:
+                                TUIs = self.graph.nodes[node]['attr'][1]
+                                RTUIs = self.graph.nodes[Rnode]['attr'][1]
+                                for TUI in TUIs:
+                                    if TUI in RTUIs:
+                                        self.graph.add_edge(node, Rnode)
 
 
-    '''
-    Tenemos creadas las funciones necesarias para conectar el grafo
-    tras crear el grafo directo y el inverso, ahora debemos crear los
-    métodos necesarios para formar tanto el grafo directo como el 
-    inverso
-    '''
+    def connectionMethod2(self):
+        '''
+        Este método de conexión conecta los nodos directos con los nodos inversos si 
+        coinciden en su TUI
+        '''
+        for node in self.graph.nodes:
+            # Comprobación de que se trata de un nodo directo
+            if node.startswith('0.'):
+                for Rnode in self.graph.nodes:
+                    # Comprobación de que se trata de un nodo inverso
+                    if Rnode.startswith('R.'):
+                        TUIs = self.graph.nodes[node]['attr'][1]
+                        RTUIs = self.graph.nodes[Rnode]['attr'][1]
+                        for TUI in TUIs:
+                            if TUI in RTUIs:
+                                self.graph.add_edge(node, Rnode)
 
-    def one_way_graph(entities, TUIs, entity_list, TUI_list, graph_index_list, graph_index, reverse: bool):
-        for index in range(len(entities)):
-            graph_index = graph_index + "." + str(index+1)
-            if type(entities[index]) is not str:
-                one_way_graph(entities[index], TUIs[index], entity_list, TUI_list, graph_index_list, graph_index, reverse)
+
+    def connectionMethod3(self):
+        '''
+        Este método de conexión conecta cada nodo del grafo con los nodos que tengan
+        el mismo TUI
+        '''
+        for node in self.graph.nodes:
+            # Nos aseguramos de que no toma ni el nodo inicial ni los posibles nodos finales
+            if node != '0':
+                if not node.startswith('T'):
+                    TUIs = self.graph.nodes[node]['attr'][1]
+                    for Rnode in self.graph.nodes:
+                        # Nos aseguramos de que no se compara consigo mismo
+                        if node != Rnode:
+                            # Nos aseguramos que el segundo nodo tampoco es el inicial ni los finales
+                            if Rnode != '0':
+                                if not Rnode.startswith('T'):
+                                    RTUIs = self.graph.nodes[Rnode]['attr'][1]
+                                    for TUI in TUIs:
+                                        if TUI in RTUIs:
+                                            self.graph.add_edge(node, Rnode)
+
+    def graph_connection(self, entities, TUIs, node):
+        for leaf in range(len(entities)):
+            father_node = node
+            if type(entities[leaf]) is not str:
+                node = node + "." + str(leaf+1)
+                self.graph_connection(entities[leaf], TUIs[leaf], node)
             else:
-                entity_list.append(entities[index])
-                TUI_list.append(TUIs[index])
-                if reverse == True:
-                    if graph_index[0] != 'R':
-                        graph_index = 'R' + graph_index
-                    graph_index_list.append(graph_index)
-                else:
-                    if graph_index[0] != '0':
-                        graph_index = '0' + graph_index
-                    graph_index_list.append(graph_index)
-            previous = graph_index.rindex('.')
-            graph_index = graph_index[0:previous]
-        return entity_list, TUI_list, graph_index_list
+                node = node + "." + str(leaf+1)
+                father_index = node.rindex('.')
+                father_node = node[0:father_index]
+                self.graph.add_node(node, attr= [entities[leaf], TUIs[leaf]])
+                self.graph.add_edge(father_node, node)
+                node = father_node
+            node = father_node
     
 
-    def connection(self, forward:list, backward:list):
-        fw_entities, fw_TUIs, fw_indexes = one_way_graph(forward[0], forward[1], 
-                                                        forward[2], forward[3], 
-                                                        forward[4], forward[5], 
-                                                        forward[6])
+    def graph_generator(self, n_hopes, candidate_dict):
+        graph = self.graph
+        # nodos directos
+        node = '0'
+        graph.add_node(node, attr= [candidate_dict['candidate'], candidate_dict['TUIs']])
+        # nodos inversos
+        Rnode = 'R'
+        graph.add_node(node)
+        for hop in range(n_hopes):
+            #nodos directos
+            entities = candidate_dict['hop ' + str(hop+1)][0]
+            TUIs = candidate_dict['hop ' + str(hop+1)][1]
+            self.graph_connection(entities, TUIs, node)
+            
+            # nodos inversos
+            entities = candidate_dict['Rhop ' + str(hop+1)][0]
+            TUIs = candidate_dict['Rhop ' + str(hop+1)][1]
+            self.graph_connection(entities, TUIs, Rnode)
         
-        bw_entities, bw_TUIs, bw_indexes = one_way_graph(backward[0], backward[1], 
-                                                        backward[2], backward[3], 
-                                                        backward[4], backward[5], 
-                                                        backward[6])
-        
-        for entity in range(len(fw_entities)):
-            for bw_entity in range(len(bw_entities)):
-                if fw_TUIs[entity] == bw_TUIs[bw_entity]:
-                    self.graph.add_edge(fw_indexes[entity], bw_indexes[bw_entity])
+        # Eliminamos el nodo R que no vale pa nah
+        self.graph.remove_node('R')
+
+        # Añadimos los nodos de TUIs y las conexiones finales de los mismos
+        TUI_list = candidate_dict['TUIs']    
+        for TUI in TUI_list:
+            self.graph.add_node(TUI)
+            for node in self.graph.nodes:
+                if node.startswith('R'):
+                    if node.rindex('.') == 1:
+                        if TUI in self.graph.nodes[node]['attr'][1]:
+                            self.graph.add_edge(TUI, node)
+
+
+        # Conectamos el grafo con el método de conexión seleccionado
+        connectionMethod1(self)
+
+    def graph_list(self, n_hopes, candidates_dict):
+        for candidate_dict in range(len(candidates_dict)):
+            self.graph_generator(n_hopes, candidates_dict[candidate_dict])
+            pkl.dump(self.graph, open(self.folder + str(candidate_dict) +'.pickle', 'wb'))
+            self.graph.clear()

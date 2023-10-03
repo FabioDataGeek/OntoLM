@@ -1,4 +1,4 @@
-from segtok.segmenter import split_single
+#from segtok.segmenter import split_single
 import gc
 
 '''
@@ -11,11 +11,19 @@ NER sobre el abstract completo.
 def get_indices_of_string_matches(my_list, target_string):
     return [index for index, item in enumerate(my_list) if target_string in item]
 
-def split_into_sentences(text):
-    return split_single(text)
+#def split_into_sentences(text):
+#    return split_single(text)
 
 def remove_stop_words(text):
     pass
+
+def character_count(string, character):
+    counter = 0
+    for char in string:
+        if char.lower() == character.lower():
+            counter += 1
+
+    return counter 
 
 def to_lowercase(text):
     return text.lower()

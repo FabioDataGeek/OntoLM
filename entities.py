@@ -14,8 +14,9 @@ class Linked_Entities():
         self.ontology = ontology
         self. threshold = threshold
         self.max_entities_per_mention = max_entities_per_mention
-        self.linker = EntityLinker(self.resolve_abbreviations, self.ontology, 
-                                   self.threshold, self.max_entities_per_mention)
+        self.linker = EntityLinker(resolve_abbreviations=self.resolve_abbreviations, 
+                                   name=self.ontology, threshold=self.threshold, 
+                                   max_entities_per_mention=self.max_entities_per_mention)
 
 
     def connectedEntities(self, entity: str, list_linked_entities) -> list[list[str], list[str]]:
@@ -83,7 +84,7 @@ class Linked_Entities():
         return new_entity_list, new_TUI_list
 
 
-    def getEntitiesAndTUIs(list_linked_entities):
+    def getEntitiesAndTUIs(self, list_linked_entities):
         entities = []
         TUIs_list = []
         
@@ -91,7 +92,7 @@ class Linked_Entities():
             TUIs = []
             CUIs = entity[1]
             for CUI in CUIs:
-                new_entity = linker.kb.cui_to_entity[CUI[0]]
+                new_entity = self.linker.kb.cui_to_entity[CUI[0]]
                 TUI = new_entity.types
                 TUIs.append(TUI)
             TUIs = list(itertools.chain.from_iterable(TUIs))
@@ -131,15 +132,15 @@ class Linked_Entities():
     (cada copia llevará asociado un TUI diferente como se muestra en la siguiente celda)
     '''      
 
-    def otherRelatedEntities(golden_entity:str, candidates: list[str], 
-                             candidates_TUIs: list[list[str]], 
+    def otherRelatedEntities(self, golden_entity:str, 
+                            candidates: list[str], 
+                            candidates_TUIs: list[list[str]], 
                             entity_list, TUI_list):
         
         '''
         Esta función nos indica para una entidad dada del texto cuales son las entidades
         relacionadas con la misma (porque comparten alguno de sus TUIs) encontradas en el 
-        mismo texto, esta función hay que utilizarla después de entities_from_text
-        ya que esa función nos da entity_list y TUI_list como entrada para esta.
+        mismo texto.
         '''
 
         returned_entities = []
@@ -159,7 +160,6 @@ class Linked_Entities():
             new_entity_list = list(entity_list)
         
         for golden_TUI in golden_TUIs:
-            returned_entities.append([])
             current_indexes = get_indices_of_string_matches(new_TUI_list, golden_TUI)
             index_list.append(current_indexes)
 
@@ -180,3 +180,32 @@ class Linked_Entities():
             column_entities.append(entities)
             column_TUIs.append(TUIs)
         return column_entities[0], column_TUIs[0]
+    
+
+    def getNextEntitiesAndTUIs(self, entity, list_linked_entities):
+        entities_list = []
+        TUIs_list = []
+        TUIs = []
+        if len(list_linked_entities) == 0:
+            entities_list = []
+            TUIs_list = []
+        else:
+            CUIs = list_linked_entities[0][1]
+            for CUI in CUIs:
+                new_entity = self.linker.kb.cui_to_entity[CUI[0]]
+                new_entity_name = new_entity.canonical_name
+                TUI = new_entity.types
+                if str(entity) != str(new_entity_name):
+                    entities_list.append(new_entity_name)
+                    TUIs_list.append(TUI)
+
+        return entities_list, TUIs_list
+    
+    def getTUIs(self, entities, entity_list, TUI_list):
+        list = []
+        for entity in range(len(entities)):
+            entity_name = entities[entity]
+            index = entity_list.index(entity_name)
+            TUIs = TUI_list[index]
+            list.append(TUIs)
+        return list  
