@@ -1,3 +1,4 @@
+import os
 import networkx as nx
 import pickle as pkl
 from utils import character_count
@@ -96,7 +97,7 @@ class GraphGenerator():
         graph.add_node(node, attr= [candidate_dict['candidate'], candidate_dict['TUIs']])
         # nodos inversos
         Rnode = 'R'
-        graph.add_node(node)
+        graph.add_node(Rnode)
         for hop in range(n_hopes):
             #nodos directos
             entities = candidate_dict['hop ' + str(hop+1)][0]
@@ -123,10 +124,27 @@ class GraphGenerator():
 
 
         # Conectamos el grafo con el método de conexión seleccionado
-        connectionMethod1(self)
+        self.connectionMethod1()
 
     def graph_list(self, n_hopes, candidates_dict):
         for candidate_dict in range(len(candidates_dict)):
             self.graph_generator(n_hopes, candidates_dict[candidate_dict])
-            pkl.dump(self.graph, open(self.folder + str(candidate_dict) +'.pickle', 'wb'))
+            pkl.dump(self.graph, open(f"{self.folder}/graphs/{str(candidate_dict)}.pkl", 'wb'))
             self.graph.clear()
+
+    #TENEMOS QUE MODIFICAR LOS NODOS FINALES, AÑADIENDO COMO ATTR SU RESPECTIVO NOMBRE SEGÚN EL DICCIONARIO QUE LOS MAPEA
+    def vocab_generator(self):
+        vocab_list = []
+        graphs = os.listdir(f"{self.folder}/graphs")
+        for graph in graphs:
+            g = pkl.load(open(f"{self.folder}/graphs/{graph}", 'rb'))
+            for node in g.nodes:
+                if node != '0':
+                    if not node.startswith('T'):
+                        name = g.nodes[node]['attr'][0]
+                        if name not in vocab_list:
+                            vocab_list.append(name)
+
+        with open(f'{self.folder}/vocab.pkl', 'wb') as f:
+            pkl.dump(vocab_list, f)
+        return vocab_list
