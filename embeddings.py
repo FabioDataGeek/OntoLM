@@ -3,6 +3,7 @@ from tqdm import tqdm
 import torch
 from transformers import AutoTokenizer, AutoModel, AutoConfig
 import pickle as pkl
+import math
 #tokenizer  = AutoTokenizer.from_pretrained("cambridgeltl/SapBERT-from-PubMedBERT-fulltext")
 #bert_model = AutoModel.from_pretrained("cambridgeltl/SapBERT-from-PubMedBERT-fulltext")
 
@@ -13,27 +14,46 @@ los grafos, concretamente para tener la estructura de grafos adecuada para la GN
 '''
 
 class Embeddings():
-    def __init__(self, tokenizer, bert_model, device, folder):
+    def __init__(self, tokenizer, bert_model, device, folder_in, folder_out):
         self.tokenizer = tokenizer
         self.bert_model = bert_model
         self.device = device
-        self.folder = folder
+        self.folder_in = folder_in
+        self.folder_out = folder_out
+        self.bert_model.to(self.device)
+
 
     def run(self):
-        device = torch.device('cuda')
-        self.bert_model.to(device)
         self.bert_model.eval()
+        with open(f"{self.folder_in}") as f:
+            f = f.readlines()
+            embs = []
+            for i in tqdm(range(len(f))):
+                name = [f[i].strip()]
+                if len(name[0]) > 512:
+                    name = [name[0][:512]]
+                tensors = self.tokenizer(name, padding=True, truncation=True, return_tensors="pt")
+                with torch.no_grad():
+                    outputs = self.bert_model(input_ids=tensors["input_ids"].to(self.device), 
+                                        attention_mask=tensors['attention_mask'].to(self.device))
+                    out = np.array(outputs[1].squeeze().tolist()).reshape((1, -1))
+                    embs.append(out)
+            embs = np.concatenate(embs)
+            np.save(f"{self.folder_out}", embs)
 
-        with open(f"{self.folder}/vocab.pkl", 'rb') as f:
-            names = pkl.load(f)
 
-        embs = []
-        tensors = self.tokenizer(names, padding=True, truncation=True, return_tensors="pt")
-        with torch.no_grad():
-            for i, j in enumerate(tqdm(names)):
-                outputs = self.bert_model(input_ids=tensors["input_ids"][i:i+1].to(device), 
-                                    attention_mask=tensors['attention_mask'][i:i+1].to(device))
-                out = np.array(outputs[1].squeeze().tolist()).reshape((1, -1))
-                embs.append(out)
-        embs = np.concatenate(embs)
-        np.save(f"{self.folder}/ent_emb.npy", embs)
+
+
+
+
+
+
+
+
+"""                 if final_point + batch <= nlines:
+                    initial_point += batch
+                    final_point += batch
+                else:
+                    initial_point += batch
+                    diff = nlines-final_point
+                    final_point = nlines - diff """

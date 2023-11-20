@@ -145,7 +145,7 @@ class Linked_Entities():
 
         returned_entities = []
         index_list = []
-
+        returned_TUIs = []
         golden_index = candidates.index(golden_entity)
         golden_TUIs = candidates_TUIs[golden_index]
 
@@ -168,15 +168,16 @@ class Linked_Entities():
         
         for index in index_list:
             returned_entities.append(new_entity_list[index])
+            returned_TUIs.append(new_TUI_list[index])
+            
+        return returned_entities, returned_TUIs
 
-        return returned_entities
 
-
-    def column_of_entities(entities: list[str], list_linked_entities):
+    def column_of_entities(self, entities: list[str], list_linked_entities):
         column_entities = []
         column_TUIs = []
         for entity in entities:
-            entities, TUIs = connectedEntities(entity, list_linked_entities)
+            entities, TUIs = self.connectedEntities(entity, list_linked_entities)
             column_entities.append(entities)
             column_TUIs.append(TUIs)
         return column_entities[0], column_TUIs[0]
