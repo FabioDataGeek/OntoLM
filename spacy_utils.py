@@ -43,8 +43,8 @@ class Ner():
     def linked_entities(self, doc):
         list_linked_entities = []
         for ent in doc.ents:
-            linked_entities = ent._.kb_ents 
-            if len(linked_entities) > 0:
+            linked_entities = ent._.kb_ents
+            if len(linked_entities) > 0: 
                 list_linked_entities.append([str(ent), linked_entities])
         return list_linked_entities
         

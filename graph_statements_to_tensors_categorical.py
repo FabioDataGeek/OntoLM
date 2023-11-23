@@ -52,13 +52,12 @@ def GNN_tensors(graph, graph_max_size):
 
 files =['train', 'test', 'dev']
 for file in files:
-    with open(f"/usrvol/data/ISABIAL/categorical/graphs/{file}.pickle", 'rb') as f:
+    with open(f"/usrvol/experiments/ISABIAL/categorical_gran_escala/graphs/{file}.pickle", 'rb') as f:
         graph_statements = pkl.load(f)
     graph_statements_tensors = [None] * 6
     for graphs in tqdm(graph_statements):
         for graph in graphs:
-            print(graph.number_of_nodes())
-            output = GNN_tensors(graph, 300)
+            output = GNN_tensors(graph, 200)
             for i in range(len(output)):
                 if graph_statements_tensors[i] == None:
                     if i == 3:
@@ -75,7 +74,7 @@ for file in files:
                     else:
                         graph_statements_tensors[i] = torch.cat((graph_statements_tensors[i],output[i]),0)
        
-    with open(f"/usrvol/data/categorical/graph_statements_tensors/graph_statements{file}.pickle", 'wb') as f:
+    with open(f"/usrvol/experiments/data/categorical_gran_escala/graph_statements_tensors/graph_statements{file}.pickle", 'wb') as f:
         pkl.dump(graph_statements_tensors, f)
 
 print("")

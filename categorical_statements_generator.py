@@ -44,8 +44,9 @@ for i in final_labels.keys():
                     continue
                 else:
                     statement['category'].append(label[0])
-            statements.append(statement)
-            graphs_statements.append(graphs[term])
+            if term in graphs.keys():
+                statements.append(statement)
+                graphs_statements.append(graphs[term])
 
 with open("/usrvol/data/categorical/statements.pickle", 'wb') as f:
     pkl.dump(statements, f)

@@ -67,12 +67,13 @@ def subgraph_generator(entities, graph, obtained_entities, TUIs, limit= 200, tot
     if len(obtained_entities) > total_limit:
         obtained_entities = obtained_entities[:total_limit]
         entity_list = entity_list[:total_limit]
+        new_triple_list = []
         for triple in triple_list:
-            if triple[0] not in obtained_entities:
-                triple_list.remove(triple)
-                continue
-            if triple[1] not in obtained_entities:
-                triple_list.remove(triple)
+            if triple[0] in obtained_entities:
+                if triple[1] in obtained_entities:
+                    new_triple_list.append(triple)
+
+        triple_list = new_triple_list
     return entity_list, triple_list, obtained_entities
 
 

@@ -97,7 +97,7 @@ class Linked_Entities():
                 TUIs.append(TUI)
             TUIs = list(itertools.chain.from_iterable(TUIs))
             TUIs = list(set(TUIs))
-            entities.append(entity[0])
+            entities.append(entity[0].lower())
             TUIs_list.append(TUIs)
         
         return entities, TUIs_list
@@ -109,6 +109,17 @@ class Linked_Entities():
     '''
 
     def candidatesChecker(self, list_linked_entities):
+        """
+        Check the candidates from the list of linked entities based on their TUIs.
+
+        Args:
+            list_linked_entities (list): List of linked entities, where each entity is a tuple containing CUIs.
+
+        Returns:
+            tuple: A tuple containing two lists - candidates and TUIs_list.
+                - candidates: List of entities that have more than one TUI.
+                - TUIs_list: List of TUIs associated with each candidate entity.
+        """
         candidates = []
         TUIs_list = []
 
@@ -132,9 +143,8 @@ class Linked_Entities():
     (cada copia llevará asociado un TUI diferente como se muestra en la siguiente celda)
     '''      
 
-    def otherRelatedEntities(self, golden_entity:str, 
-                            candidates: list[str], 
-                            candidates_TUIs: list[list[str]], 
+    def otherRelatedEntities(self, candidate,
+                            candidate_TUIs, 
                             entity_list, TUI_list):
         
         '''
@@ -142,35 +152,27 @@ class Linked_Entities():
         relacionadas con la misma (porque comparten alguno de sus TUIs) encontradas en el 
         mismo texto.
         '''
+        related_entities = []
+        related_TUIs = []
+        for entity in range(len(TUI_list)):
+            TUIs = TUI_list[entity]
+            for candidate_TUI in candidate_TUIs:
+                if candidate_TUI[0] in TUIs:
+                    related_entities.append(entity_list[entity])
+                    break
+            related_entities = list(set(related_entities))
 
-        returned_entities = []
-        index_list = []
-        returned_TUIs = []
-        golden_index = candidates.index(golden_entity)
-        golden_TUIs = candidates_TUIs[golden_index]
+            if candidate in related_entities:
+                index = related_entities.index(candidate)
+                related_entities.remove(candidate)
+  
+        for entity in related_entities:
+            index = entity_list.index(entity)
+            TUIs = TUI_list[index]
+            TUIs = list(set(TUIs))
+            related_TUIs.append(TUIs)
 
-        if golden_entity in entity_list:
-            index = entity_list.index(golden_entity)
-            new_TUI_list = list(TUI_list)
-            new_entity_list = list(entity_list)
-            new_TUI_list.remove(new_TUI_list[index])
-            new_entity_list.remove(new_entity_list[index])
-        else:
-            new_TUI_list = list(TUI_list)
-            new_entity_list = list(entity_list)
-        
-        for golden_TUI in golden_TUIs:
-            current_indexes = get_indices_of_string_matches(new_TUI_list, golden_TUI)
-            index_list.append(current_indexes)
-
-        index_list = list(itertools.chain.from_iterable(index_list))
-        index_list = list(set(index_list))
-        
-        for index in index_list:
-            returned_entities.append(new_entity_list[index])
-            returned_TUIs.append(new_TUI_list[index])
-            
-        return returned_entities, returned_TUIs
+        return related_entities, related_TUIs
 
 
     def column_of_entities(self, entities: list[str], list_linked_entities):

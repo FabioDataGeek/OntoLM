@@ -7,10 +7,10 @@ import math
 Ejecutamos este script antes de formar los tensores del grafo
 '''
 
-with open('/usrvol/data/categorical/graph_statements/graph_statements.pickle', 'rb') as f:
+with open('/usrvol/experiments/data/categorical_gran_escala/graph_statements/graph_statements_balanced.pickle', 'rb') as f:
     graphs =  pkl.load(f)
 
-with open('/usrvol/data/categorical/statements.pickle', 'rb') as f:
+with open('/usrvol/experiments/data/categorical_gran_escala/statements_balanced.pickle', 'rb') as f:
     statements = pkl.load(f)
 
 assert len(graphs) == len(statements)
@@ -31,7 +31,7 @@ test_index = random_list[train_size+dev_size:]
 # Hacemos los archivos train, test y dev para el texto
 counter = 0
 for i in (train_index):
-    with open(f"/usrvol/data/ISABIAL/categorical/statements/train.statements.jsonl", 'a') as fout:
+    with open(f"/usrvol/experiments/ISABIAL/categorical_gran_escala/statements/train.statements.jsonl", 'a') as fout:
         stm = statements[i]
         stm['id'] = f"train-{counter:05d}"
         print(json.dumps(stm), file=fout)
@@ -39,7 +39,7 @@ for i in (train_index):
 
 counter = 0
 for i in (dev_index):
-    with open(f"/usrvol/data/ISABIAL/categorical/statements/dev.statements.jsonl", 'a') as fout:
+    with open(f"/usrvol/experiments/ISABIAL/categorical_gran_escala/statements/dev.statements.jsonl", 'a') as fout:
         stm = statements[i]
         stm['id'] = f"dev-{counter:05d}"
         print(json.dumps(stm), file=fout)
@@ -47,31 +47,29 @@ for i in (dev_index):
 
 counter = 0
 for i in (test_index):
-    with open(f"/usrvol/data/ISABIAL/categorical/statements/test.statements.jsonl", 'a') as fout:
+    with open(f"/usrvol/experiments/ISABIAL/categorical_gran_escala/statements/test.statements.jsonl", 'a') as fout:
         stm = statements[i]
         stm['id'] = f"test-{counter:05d}"
         print(json.dumps(stm), file=fout)
     counter +=1   
 
-
-
 # Hacemos los archivos train, test y dev para los grafos
 graph_list = []
 for i in (train_index):
     graph_list.append(graphs[i])
-with open('/usrvol/data/ISABIAL/categorical/graphs/train.pickle', 'wb') as f:
+with open('/usrvol/experiments/ISABIAL/categorical_gran_escala/graphs/train.pickle', 'wb') as f:
     pkl.dump(graph_list, f)
 
 
 graph_list = []
 for i in (dev_index):
     graph_list.append(graphs[i])
-with open('/usrvol/data/ISABIAL/categorical/graphs/dev.pickle', 'wb') as f:
+with open('/usrvol/experiments/ISABIAL/categorical_gran_escala/graphs/dev.pickle', 'wb') as f:
     pkl.dump(graph_list, f)
 
 
 graph_list = []
 for i in (test_index):
     graph_list.append(graphs[i])
-with open('/usrvol/data/ISABIAL/categorical/graphs/test.pickle', 'wb') as f:
+with open('/usrvol/experiments/ISABIAL/categorical_gran_escala/graphs/test.pickle', 'wb') as f:
     pkl.dump(graph_list, f)
